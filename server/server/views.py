@@ -6,6 +6,7 @@ from django.http import JsonResponse
 import tensorflow as tf
 from django.views.decorators.csrf import csrf_exempt
 from datetime import datetime
+from dateutil import parser
 
 model = tf.keras.models.load_model('model.h5')
 QT = joblib.load('quantile_transformer.pkl')
@@ -60,7 +61,7 @@ def post(request):
         input['diffWalk'] = int(input['diffWalk'])
 
         today = datetime.today()
-        birthdate = datetime.strptime(input['birthdate'], '%Y-%m-%d')
+        birthdate = parser.parse(input['birthdate'])
         age = today.year - birthdate.year - ((today.month, today.day) < (birthdate.month, birthdate.day))
         input['age'] = age
 
