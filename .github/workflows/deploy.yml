@@ -3,7 +3,7 @@ name: Deploy
 on:
   push:
     branches: [ "master" ]
-  commit:
+  pull_request:
     branches: [ "master" ]
 
 env:
