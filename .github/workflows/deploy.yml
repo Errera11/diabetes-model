@@ -46,9 +46,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Set up SSH agent
-          uses: webfactory/ssh-agent@v0.5.3
-          with:
-            ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+        uses: webfactory/ssh-agent@v0.5.3
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
       - name: Connect and run script
         uses: appleboy/ssh-action@master
         with:
@@ -57,6 +57,7 @@ jobs:
           username: ${{ secrets.SERVER_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
         run: |
+          echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
           docker stop $(docker ps -q --filter ancestor=$IMAGE_NAME )
           docker rm $(docker ps -a -q --filter ancestor=$IMAGE_NAME )
           docker rmi $IMAGE_NAME
