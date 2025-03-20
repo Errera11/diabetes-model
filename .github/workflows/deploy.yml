@@ -56,9 +56,13 @@ jobs:
       - name: Run scripts
         run: |
           echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
-          docker stop $(docker ps -q --filter ancestor=$IMAGE_NAME )
-          docker rm $(docker ps -a -q --filter ancestor=$IMAGE_NAME )
-          docker rmi $IMAGE_NAME
+          
+          containers=$(docker ps -q --filter ancestor=$IMAGE_NAME)
+          if [ -n "$containers" ]; then
+            docker stop $containers
+          fi
+          docker ps -a -q --filter ancestor=$IMAGE_NAME | xargs -r docker rm
+          docker images $IMAGE_NAME | xargs -r docker rmi
           docker pull $IMAGE_NAME
           docker run -p 127.0.0.1:1616:1616 --name diabates-model -d $IMAGE_NAME
 #          script_stop: true
