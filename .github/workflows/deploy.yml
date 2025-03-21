@@ -6,9 +6,6 @@ on:
   pull_request:
     branches: [ "master" ]
 
-env:
-  IMAGE_NAME: ${{ secrets.DOCKER_USERNAME }}/${{ secrets.REPO_NAME }}
-
 jobs:
   push_to_registry:
     name: Push Docker image to Docker Hub
@@ -48,11 +45,20 @@ jobs:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
       - name: Connect
         uses: appleboy/ssh-action@master
+        env:
+          IMAGE_NAME: ${{ secrets.DOCKER_USERNAME }}/${{ secrets.REPO_NAME }}
         with:
           host: ${{ secrets.SSH_HOST }}
           port: ${{ secrets.SSH_PORT }}
           username: ${{ secrets.SSH_USER }}
+          envs: IMAGE_NAME
           script: |
+            # Check if IMAGE_NAME is empty
+            if [ -z "$IMAGE_NAME" ]; then
+              echo "ERROR: IMAGE_NAME environment variable is empty"
+              exit 1
+            fi
+
             echo "Image name - $IMAGE_NAME"
             echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
             
@@ -62,6 +68,7 @@ jobs:
               docker stop "$containers"
             fi
 
+            echo "Removing stopped container"
             echo "Removing stopped container"
             docker ps -a -q --filter ancestor="$IMAGE_NAME" | xargs -r docker rm
   
