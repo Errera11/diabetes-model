@@ -63,7 +63,9 @@ jobs:
           fi
           docker ps -a -q --filter ancestor="$IMAGE_NAME" | xargs -r docker rm
           docker images -q "$IMAGE_NAME" | xargs -r docker rmi
+          echo "Pullin an image"
           docker pull "$IMAGE_NAME"
+          echo "Running an image"
           docker run -p 127.0.0.1:1616:1616 --restart unless-stopped --name diabetes-django -d "$IMAGE_NAME"
 #          script_stop: true
 #          script: bash deploy.sh
