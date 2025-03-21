@@ -52,19 +52,25 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           port: ${{ secrets.SSH_PORT }}
           username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
+            echo "Image name - $IMAGE_NAME"
             echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
             
+            echo "Removing image existing container"
             containers=$(docker ps -q --filter ancestor="$IMAGE_NAME")
             if [ -n "$containers" ]; then
               docker stop "$containers"
             fi
+
+            echo "Removing stopped container"
             docker ps -a -q --filter ancestor="$IMAGE_NAME" | xargs -r docker rm
+  
+            echo "Removing old dated image"
             docker images -q "$IMAGE_NAME" | xargs -r docker rmi
             echo "Pullin an image"
             docker pull "$IMAGE_NAME"
             echo "Running an image"
             docker run -p 127.0.0.1:1616:1616 --restart unless-stopped --name diabetes-django -d "$IMAGE_NAME"
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
 #          script_stop: true
 #          script: bash deploy.sh
