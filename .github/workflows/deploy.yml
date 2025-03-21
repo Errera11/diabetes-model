@@ -59,7 +59,7 @@ jobs:
           
           containers=$(docker ps -q --filter ancestor="$IMAGE_NAME")
           if [ -n "$containers" ]; then
-            docker stop $containers
+            docker stop "$containers"
           fi
           docker ps -a -q --filter ancestor="$IMAGE_NAME" | xargs -r docker rm
           docker images "$IMAGE_NAME" | xargs -r docker rmi
