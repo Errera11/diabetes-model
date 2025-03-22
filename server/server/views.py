@@ -19,6 +19,17 @@ def scaleVal(val, scaler_type='standard'):
         scaledVal = QT.transform(np.array(val).reshape(1, -1))
     return scaledVal[0][0]
 
+def map_age(age):
+    try:
+        conditions = [x <= age <= x + 5 for x in range(18, 81, 5)]
+
+        return conditions.index(True) + 1
+    except:
+        if age > 81:
+            return 13
+
+        return JsonResponse({'error': 'Age must be in range 18-...'}, status=400)
+
 # bloodPressure birthdate height weight cholLevel diffWalk heartDisease physHealth physActivity genHealth
 @csrf_exempt
 def post(request):
@@ -63,7 +74,8 @@ def post(request):
         today = datetime.today()
         birthdate = parser.parse(input['birthdate'])
         age = today.year - birthdate.year - ((today.month, today.day) < (birthdate.month, birthdate.day))
-        input['age'] = age
+
+        input['age'] = map_age(age)
 
         print('input', input)
 
