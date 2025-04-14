@@ -48,51 +48,50 @@ def post(request):
         if not(all(key in input for key in required_keys)):
             return JsonResponse({'error': "'Invalid data format"}, status=400)
 
-        input_data = []
+        input_data = {}
 
         if float(input['bloodPressure']) > 140:
-            input['bloodPressure'] = 1
+            input_data['bloodPressure'] = 1
         else:
-            input['bloodPressure'] = 0
+            input_data['bloodPressure'] = 0
 
         if float(input['cholLevel']) > 6:
-            input['cholLevel'] = 1
+            input_data['cholLevel'] = 1
         else:
-            input['cholLevel'] = 0
+            input_data['cholLevel'] = 0
 
         height = float(input['height'])
         weight = float(input['weight'])
         bmi = weight / height**2
 
-        input['bmi'] = bmi
-        input['heartDisease'] = int(input['heartDisease'])
-        input['physActivity'] = int(input['physActivity'])
-        input['genHealth'] = float(input['genHealth'])
-        input['physHealth'] = int(input['physHealth'])
-        input['diffWalk'] = int(input['diffWalk'])
+        input_data['bmi'] = bmi
+        input_data['heartDisease'] = int(input['heartDisease'])
+        input_data['physActivity'] = int(input['physActivity'])
+        input_data['genHealth'] = float(input['genHealth'])
+        input_data['physHealth'] = int(input['physHealth'])
+        input_data['diffWalk'] = int(input['diffWalk'])
 
         today = datetime.today()
         birthdate = parser.parse(input['birthdate'])
+
         age = today.year - birthdate.year - ((today.month, today.day) < (birthdate.month, birthdate.day))
 
-        input['age'] = map_age(age)
+        input_data['age'] = map_age(age)
 
-        print('input', input)
+        input_data['genHealth'] = scaleVal(input_data['genHealth'])
+        input_data['bmi'] = scaleVal(input_data['bmi'])
+        input_data['age'] = scaleVal(input_data['age'])
+        input_data['physHealth'] = scaleVal(input_data['physHealth'])
 
-        input['genHealth'] = scaleVal(input['genHealth'])
-        input['bmi'] = scaleVal(input['bmi'])
-        input['age'] = scaleVal(input['age'])
-        input['physHealth'] = scaleVal(input['physHealth'])
+        input_data['genHealth'] = scaleVal(input_data['genHealth'], 'quantile')
+        input_data['bmi'] = scaleVal(input_data['bmi'], 'quantile')
+        input_data['age'] = scaleVal(input_data['age'], 'quantile')
+        input_data['physHealth'] = scaleVal(input_data['physHealth'], 'quantile')
 
-        input['genHealth'] = scaleVal(input['genHealth'], 'quantile')
-        input['bmi'] = scaleVal(input['bmi'], 'quantile')
-        input['age'] = scaleVal(input['age'], 'quantile')
-        input['physHealth'] = scaleVal(input['physHealth'], 'quantile')
+        input_data = [input_data['bloodPressure'], input_data['cholLevel'], input_data['bmi'], input_data['heartDisease'], input_data['physActivity'], input_data['genHealth'], input_data['physHealth'], input_data['diffWalk'], input_data['age']]
 
-        input_data = [input['bloodPressure'], input['cholLevel'], input['bmi'], input['heartDisease'], input['physActivity'], input['genHealth'], input['physHealth'], input['diffWalk'], input['age']]
         input_data = np.array(input_data).reshape(1, 9)
 
-        print('input_data', input_data)
 
         prediction = model.predict(input_data)
 
