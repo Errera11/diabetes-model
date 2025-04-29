@@ -77,7 +77,7 @@ jobs:
             echo "Pullin an image"
             docker pull "$IMAGE_NAME"
             echo "Running an image"
-            docker run -p 127.0.0.1:1616:1616 --network=microservices_network --name diabetes-django-model --restart unless-stopped --name diabetes-django -d "$IMAGE_NAME"
+            docker run -p 0.0.0.0:1616:1616 --network=microservices_network --name diabetes-django-model --restart unless-stopped --name diabetes-django -d "$IMAGE_NAME"
           key: ${{ secrets.SSH_PRIVATE_KEY }}
 #          script_stop: true
 #          script: bash deploy.sh
