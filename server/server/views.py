@@ -12,12 +12,15 @@ model = tf.keras.models.load_model('model.h5')
 QT = joblib.load('quantile_transformer.pkl')
 ST = joblib.load('standard_transformer.pkl')
 
-def scaleVal(val, scaler_type='standard'):
-    if scaler_type == 'standard':
-        scaledVal = ST.transform(np.array(val).reshape(1, -1))
-    elif scaler_type == 'quantile':
-        scaledVal = QT.transform(np.array(val).reshape(1, -1))
-    return scaledVal[0][0]
+def scaleVal(val):
+    input_data = [val['bloodPressure'], val['cholLevel'], val['bmi'], val['heartDisease'],
+                  val['physActivity'], val['genHealth'], val['physHealth'], val['diffWalk'],
+                  val['age']]
+
+    scaledVal = ST.transform(np.array(input_data).reshape(1, -1))
+    scaledVal = QT.transform(np.array(scaledVal))
+
+    return scaledVal[0]
 
 def map_age(age):
     try:
@@ -54,12 +57,10 @@ def post(request):
             input_data['bloodPressure'] = 1
         else:
             input_data['bloodPressure'] = 0
-
         if float(input['cholLevel']) > 6:
             input_data['cholLevel'] = 1
         else:
             input_data['cholLevel'] = 0
-
         height = float(input['height'])
         weight = float(input['weight'])
         bmi = weight / height**2
@@ -78,20 +79,9 @@ def post(request):
 
         input_data['age'] = map_age(age)
 
-        input_data['genHealth'] = scaleVal(input_data['genHealth'])
-        input_data['bmi'] = scaleVal(input_data['bmi'])
-        input_data['age'] = scaleVal(input_data['age'])
-        input_data['physHealth'] = scaleVal(input_data['physHealth'])
-
-        input_data['genHealth'] = scaleVal(input_data['genHealth'], 'quantile')
-        input_data['bmi'] = scaleVal(input_data['bmi'], 'quantile')
-        input_data['age'] = scaleVal(input_data['age'], 'quantile')
-        input_data['physHealth'] = scaleVal(input_data['physHealth'], 'quantile')
-
-        input_data = [input_data['bloodPressure'], input_data['cholLevel'], input_data['bmi'], input_data['heartDisease'], input_data['physActivity'], input_data['genHealth'], input_data['physHealth'], input_data['diffWalk'], input_data['age']]
+        input_data = scaleVal(input_data)
 
         input_data = np.array(input_data).reshape(1, 9)
-
 
         prediction = model.predict(input_data)
 
