@@ -8,19 +8,22 @@ from django.views.decorators.csrf import csrf_exempt
 from datetime import datetime
 from dateutil import parser
 
-model = tf.keras.models.load_model('model.h5')
-QT = joblib.load('quantile_transformer.pkl')
-ST = joblib.load('standard_transformer.pkl')
+model = tf.keras.models.load_model('model2.keras')
+QT = joblib.load('quantile_transformer2.pkl')
+ST = joblib.load('standard_transformer2.pkl')
+
 
 def scaleVal(val):
-    input_data = [val['bloodPressure'], val['cholLevel'], val['bmi'], val['heartDisease'],
-                  val['physActivity'], val['genHealth'], val['physHealth'], val['diffWalk'],
-                  val['age']]
+    parsed = [[val['bloodPressure'], val['cholLevel'], val['bmi'], val['heartDisease'],
+              val['physActivity'], val['genHealth'], val['physHealth'], val['diffWalk'],
+              val['age']]]
 
-    scaledVal = ST.transform(np.array(input_data).reshape(1, -1))
-    scaledVal = QT.transform(np.array(scaledVal))
+    scaledVal = QT.transform(parsed)
+    # print('scaledVal', scaledVal)
+    scaledVal = ST.transform(scaledVal)
 
     return scaledVal[0]
+
 
 def map_age(age):
     try:
@@ -32,6 +35,7 @@ def map_age(age):
             return 13
 
         return JsonResponse({'error': 'Age must be in range 18-...'}, status=400)
+
 
 # bloodPressure birthdate height weight cholLevel diffWalk heartDisease physHealth physActivity genHealth
 @csrf_exempt
@@ -47,8 +51,9 @@ def post(request):
 
         input = {**data['data']}
 
-        required_keys = ["bloodPressure", "birthdate", "height", "weight", "cholLevel", "diffWalk", "heartDisease", "physHealth", "physActivity", "genHealth"]
-        if not(all(key in input for key in required_keys)):
+        required_keys = ["bloodPressure", "birthdate", "height", "weight", "cholLevel", "diffWalk", "heartDisease",
+                         "physHealth", "physActivity", "genHealth"]
+        if not (all(key in input for key in required_keys)):
             return JsonResponse({'error': "'Invalid data format"}, status=400)
 
         input_data = {}
@@ -63,7 +68,7 @@ def post(request):
             input_data['cholLevel'] = 0
         height = float(input['height'])
         weight = float(input['weight'])
-        bmi = weight / height**2
+        bmi = weight / height ** 2
 
         input_data['bmi'] = bmi
         input_data['heartDisease'] = int(input['heartDisease'])
@@ -83,9 +88,11 @@ def post(request):
 
         input_data = np.array(input_data).reshape(1, 9)
 
+        print('input_data', input_data)
         prediction = model.predict(input_data)
 
         prediction = prediction.tolist()
+        print('prediction', prediction)
 
         return JsonResponse({'prediction': prediction})
 
